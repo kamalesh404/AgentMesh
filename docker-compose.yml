@@ -1,0 +1,36 @@
+services:
+  agentmesh:
+    build: .
+    image: agentmesh:latest
+    command: ["agent", "list"]
+    environment:
+      AGENTMESH__LOG_LEVEL: INFO
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_BASE_URL: http://ollama:11434
+    depends_on:
+      - ollama
+      - redis
+    volumes:
+      - mesh-data:/home/meshuser/.agentmesh
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  mesh-data:
+  ollama-models:
